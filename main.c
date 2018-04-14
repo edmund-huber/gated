@@ -1,21 +1,7 @@
 #include <SDL.h>
 #include <signal.h>
 
-#define xstr(s) str(s)
-#define str(s) #s
-
-#define MSG(s) \
-    puts(__FILE__ ", L" xstr(__LINE__) ": " s "\n");
-
-#define ERROR(s) \
-    MSG(s); \
-    raise(3); \
-    exit(1);
-
-#define ASSERT(c) \
-    if (!(c)) { \
-        ERROR("failed: ASSERT(" xstr(c) ")") \
-    }
+#include "error.h"
 
 int main() {
     ASSERT(SDL_Init(SDL_INIT_VIDEO) == 0);
