@@ -1,5 +1,5 @@
 VERSION = $(shell git rev-parse HEAD)
-CFLAGS = -std=c99 -Wall -Werror -pedantic -DVERSION='"$(VERSION)"'
+CFLAGS = -std=c99 -Wall -Werror -DVERSION='"$(VERSION)"'
 
 gated: main.c | sdl
 	$(CC) $(CFLAGS) $(shell sdl/bin/sdl2-config --cflags) $(shell sdl/bin/sdl2-config --libs) -o $@ $^ -lSDL2
