@@ -1,0 +1,6 @@
+gated
+SDL2-2.0.8/
+sdl
+
+*.o
+*.swp
