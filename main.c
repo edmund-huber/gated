@@ -42,9 +42,16 @@ int main() {
         SDL_WINDOWPOS_UNDEFINED,
         mode.w,
         mode.h,
-        SDL_WINDOW_OPENGL
+        0
     );
     ASSERT_SDL(window != NULL);
+
+    SDL_Renderer *rend = SDL_CreateRenderer(window, -1,
+        SDL_RENDERER_TARGETTEXTURE | SDL_RENDERER_PRESENTVSYNC);
+    ASSERT_SDL(rend != NULL);
+    SDL_SetRenderDrawColor(rend, 0xff, 0, 0xff, 0xff);
+    SDL_RenderClear(rend);
+    SDL_RenderPresent(rend);
 
     SDL_Delay(5000);
     SDL_DestroyWindow(window);
