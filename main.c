@@ -4,6 +4,21 @@
 
 #include "error.h"
 
+typedef struct {
+} gate_t;
+
+typedef struct {
+} margin_t;
+
+typedef struct {
+    gate_t gate;
+    margin_t margins[4];
+} cell_t;
+
+#define CELLS_X 16
+#define CELLS_Y 16
+cell_t cells[CELLS_X][CELLS_Y];
+
 void print_display_mode(int i, SDL_DisplayMode *mode) {
     if (i == -1) {
         printf("    -> ");
@@ -46,11 +61,28 @@ int main() {
     );
     ASSERT_SDL(window != NULL);
 
-    SDL_Renderer *rend = SDL_CreateRenderer(window, -1,
-        SDL_RENDERER_TARGETTEXTURE | SDL_RENDERER_PRESENTVSYNC);
+    SDL_Renderer *rend = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE | SDL_RENDERER_PRESENTVSYNC);
     ASSERT_SDL(rend != NULL);
     SDL_SetRenderDrawColor(rend, 0xff, 0, 0xff, 0xff);
     SDL_RenderClear(rend);
+
+    int cell_w = 32;
+    int cell_h = 32;
+    for (int i = 0; i < CELLS_X; i++) {
+        for (int j = 0; j < CELLS_Y; j++) {
+            SDL_Rect rect = {
+                .x = cell_w * i,
+                .y = cell_h * j,
+                .w = cell_w,
+                .h = cell_h
+            };
+            int red = i % 2 == 0 ? 0xff : 0;
+            int blue = (j + 1) % 2 == 0 ? 0xff : 0;
+            SDL_SetRenderDrawColor(rend, red, 0, blue, 0xff);
+            SDL_RenderFillRect(rend, &rect);
+        }
+    }
+
     SDL_RenderPresent(rend);
 
     SDL_Delay(5000);
