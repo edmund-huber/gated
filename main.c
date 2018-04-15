@@ -113,12 +113,27 @@ int main() {
             }
         }
     }
-
     SDL_RenderPresent(rend);
 
-    SDL_Delay(5000);
+    int quit = 0;
+    while (!quit) {
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            switch (event.type) {
+            case SDL_KEYDOWN:
+                switch (event.key.keysym.sym) {
+                case SDLK_q:
+                    quit = 1;
+                    break;
+                }
+            }
+            break;
+        }
+        // Not a busy loop.
+        SDL_Delay(10);
+    }
+
     SDL_DestroyWindow(window);
     SDL_Quit();
-
     return 0;
 }
