@@ -1,6 +1,8 @@
 #include <SDL.h>
+#include <SDL_image.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "error.h"
 
@@ -8,11 +10,8 @@ typedef struct {
 } gate_t;
 
 typedef struct {
-} margin_t;
-
-typedef struct {
     gate_t gate;
-    margin_t margins[4];
+    int traces[4];
 } cell_t;
 
 #define CELLS_X 16
@@ -31,7 +30,11 @@ void print_display_mode(int i, SDL_DisplayMode *mode) {
 }
 
 int main() {
+    puts("version " VERSION);
+
     ASSERT_SDL(SDL_Init(SDL_INIT_VIDEO) == 0);
+    int flags = IMG_INIT_PNG;
+    ASSERT((IMG_Init(flags) & flags) == flags);
 
     // List all displays and their modes.
     int num_displays = CHECK_SDL_RET(SDL_GetNumVideoDisplays());
@@ -66,6 +69,19 @@ int main() {
     SDL_SetRenderDrawColor(rend, 0xff, 0, 0xff, 0xff);
     SDL_RenderClear(rend);
 
+    for (int i = 0; i < CELLS_X; i++) {
+        for (int j = 0; j < CELLS_Y; j++) {
+            cell_t *cell = &cells[i][j];
+            cell->traces[0] = random() % 2;
+            cell->traces[1] = random() % 2;
+            cell->traces[2] = random() % 2;
+            cell->traces[3] = random() % 2;
+        }
+    }
+
+    SDL_Surface *trace_surface = IMG_Load("trace.png");
+    SDL_Texture *tex = SDL_CreateTextureFromSurface(rend, trace_surface);
+
     int cell_w = 32;
     int cell_h = 32;
     for (int i = 0; i < CELLS_X; i++) {
@@ -76,10 +92,25 @@ int main() {
                 .w = cell_w,
                 .h = cell_h
             };
-            int red = i % 2 == 0 ? 0xff : 0;
-            int blue = (j + 1) % 2 == 0 ? 0xff : 0;
-            SDL_SetRenderDrawColor(rend, red, 0, blue, 0xff);
-            SDL_RenderFillRect(rend, &rect);
+            SDL_Rect src = { .x = 0, .y = 0, .w = 64, .h = 64 };
+            if (i % 2 == 0) {
+                SDL_SetTextureColorMod(tex, 0, 0xff, 0);
+            } else {
+                SDL_SetTextureColorMod(tex, 0, 0, 0xff);
+            }
+            cell_t *cell = &cells[i][j];
+            if (cell->traces[0]) {
+                SDL_RenderCopyEx(rend, tex, &src, &rect, 0, NULL, SDL_FLIP_NONE);
+            }
+            if (cell->traces[1]) {
+                SDL_RenderCopyEx(rend, tex, &src, &rect, 90, NULL, SDL_FLIP_NONE);
+            }
+            if (cell->traces[2]) {
+                SDL_RenderCopyEx(rend, tex, &src, &rect, 180, NULL, SDL_FLIP_NONE);
+            }
+            if (cell->traces[3]) {
+                SDL_RenderCopyEx(rend, tex, &src, &rect, 270, NULL, SDL_FLIP_NONE);
+            }
         }
     }
 

@@ -1,6 +1,8 @@
 gated
 SDL2-2.0.8/
-sdl
+sdl/
+SDL2_image-2.0.3/
+sdl_image/
 
 *.o
 *.swp
