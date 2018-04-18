@@ -49,13 +49,57 @@ void print_display_mode(int i, SDL_DisplayMode *mode) {
         SDL_GetPixelFormatName(mode->format), mode->refresh_rate);
 }
 
-SDL_Renderer *rend;
 SDL_Surface *trace_surface;
 SDL_Texture *tex;
 
-void render() {
-    int cell_w = 32;
-    int cell_h = 32;
+int cell_w = 32;
+int cell_h = 32;
+
+void render_click_map_shift(SDL_Renderer *rend, int shift) {
+    for (int i = 0; i < CELLS_X; i++) {
+        for (int j = 0; j < CELLS_Y; j++) {
+            SDL_Rect rect = {
+                .x = (cell_w * i) + 8,
+                .y = (cell_h * j) + 8,
+                .w = cell_w - 16,
+                .h = cell_h - 16
+            };
+
+            uint64_t value = (uint64_t)&cells[i][j] >> shift;
+            uint8_t
+                r = value & 0xf00,
+                g = value & 0x0f0,
+                b = value & 0x00f;
+            CHECK_SDL_RET(SDL_SetRenderDrawColor(rend, r, g, b, 0));
+            CHECK_SDL_RET(SDL_RenderFillRect(rend, &rect));
+        }
+    }
+}
+
+void render_click_map(SDL_Renderer *rend, SDL_Texture *tex_click1, SDL_Texture *tex_click2, SDL_Texture *tex_click3) {
+    // The "click map" embeds a pointer across several textures. Then, object
+    // lookup is just re-creating the pointer and following it. In order for
+    // this to work (with 3 RGB textures), the size of a pointer should be <=
+    // 64bit.
+    ASSERT(sizeof(void *) <= 8);
+
+    CHECK_SDL_RET(SDL_SetRenderTarget(rend, tex_click1));
+    CHECK_SDL_RET(SDL_SetRenderDrawColor(rend, 0, 0, 0, 0));
+    CHECK_SDL_RET(SDL_RenderClear(rend));
+    render_click_map_shift(rend, 0);
+
+    CHECK_SDL_RET(SDL_SetRenderTarget(rend, tex_click2));
+    CHECK_SDL_RET(SDL_SetRenderDrawColor(rend, 0, 0, 0, 0));
+    CHECK_SDL_RET(SDL_RenderClear(rend));
+    render_click_map_shift(rend, 24);
+
+    CHECK_SDL_RET(SDL_SetRenderTarget(rend, tex_click3));
+    CHECK_SDL_RET(SDL_SetRenderDrawColor(rend, 0, 0, 0, 0));
+    CHECK_SDL_RET(SDL_RenderClear(rend));
+    render_click_map_shift(rend, 48);
+}
+
+void render(SDL_Renderer *rend) {
     for (int i = 0; i < CELLS_X; i++) {
         for (int j = 0; j < CELLS_Y; j++) {
             SDL_Rect rect = {
@@ -122,7 +166,7 @@ int main() {
     );
     ASSERT_SDL(window != NULL);
 
-    rend = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE | SDL_RENDERER_PRESENTVSYNC);
+    SDL_Renderer *rend = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE | SDL_RENDERER_PRESENTVSYNC);
     ASSERT_SDL(rend != NULL);
 
     for (int i = 0; i < CELLS_X; i++) {
@@ -139,13 +183,19 @@ int main() {
     trace_surface = IMG_Load("trace.png");
     tex = SDL_CreateTextureFromSurface(rend, trace_surface);
 
-    SDL_Texture *tex_click = SDL_CreateTexture(rend, SDL_PIXELFORMAT_RGB888,
+    SDL_Texture *tex_click1 = SDL_CreateTexture(rend, SDL_PIXELFORMAT_RGB888,
         SDL_TEXTUREACCESS_TARGET, mode.w, mode.h);
-    ASSERT_SDL(tex_click != NULL);
+    ASSERT_SDL(tex_click1 != NULL);
+    SDL_Texture *tex_click2 = SDL_CreateTexture(rend, SDL_PIXELFORMAT_RGB888,
+        SDL_TEXTUREACCESS_TARGET, mode.w, mode.h);
+    ASSERT_SDL(tex_click2 != NULL);
+    SDL_Texture *tex_click3 = SDL_CreateTexture(rend, SDL_PIXELFORMAT_RGB888,
+        SDL_TEXTUREACCESS_TARGET, mode.w, mode.h);
+    ASSERT_SDL(tex_click3 != NULL);
 
     int quit = 0;
     bool show_click_map = false;
-    while (!quit) {
+    for (uint64_t tick = 0; !quit; tick++) {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
@@ -161,16 +211,20 @@ int main() {
             }
         }
 
-        CHECK_SDL_RET(SDL_SetRenderTarget(rend, tex_click));
-        CHECK_SDL_RET(SDL_SetRenderDrawColor(rend, 0, 0xff, 0, 0));
-        CHECK_SDL_RET(SDL_RenderClear(rend));
+        render_click_map(rend, tex_click1, tex_click2, tex_click3);
 
         CHECK_SDL_RET(SDL_SetRenderTarget(rend, NULL));
         SDL_SetRenderDrawColor(rend, 0xff, 0, 0xff, 0xff);
         SDL_RenderClear(rend);
-        render();
+        render(rend);
         if (show_click_map) {
-            CHECK_SDL_RET(SDL_RenderCopy(rend, tex_click, NULL, NULL));
+            if (tick % 31 <= 10) {
+                CHECK_SDL_RET(SDL_RenderCopy(rend, tex_click1, NULL, NULL));
+            } else if (tick % 31 <= 20) {
+                CHECK_SDL_RET(SDL_RenderCopy(rend, tex_click2, NULL, NULL));
+            } else if (tick % 31 <= 30) {
+                CHECK_SDL_RET(SDL_RenderCopy(rend, tex_click3, NULL, NULL));
+            }
         }
         SDL_RenderPresent(rend);
 
