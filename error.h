@@ -1,42 +1,45 @@
 #ifndef __ERROR_H__
 #define __ERROR_H__
 
-#define xstr(s) str(s)
-#define str(s) #s
+#include <signal.h>
+#include <stdlib.h>
 
-#define MSG(s) \
-    puts(__FILE__ ", L" xstr(__LINE__) ": " s "\n");
+#define XSTR(S) STR(S)
+#define STR(S) #S
 
-#define MSG_WITH_ARGS(s, ...) \
-  printf(__FILE__ ", L" xstr(__LINE__) ": " s "\n", __VA_ARGS__);
+#define MSG(S) \
+    puts(__FILE__ ", L" XSTR(__LINE__) ": " S "\n");
 
-#define ERROR(s) \
-    MSG(s); \
+#define MSG_WITH_ARGS(S, ...) \
+    printf(__FILE__ ", L" XSTR(__LINE__) ": " S "\n", __VA_ARGS__);
+
+#define ERROR(S) \
+    MSG(S); \
     raise(3); \
     exit(1);
 
-#define ERROR_WITH_ARGS(s, ...) \
-    MSG_WITH_ARGS(s, __VA_ARGS__); \
+#define ERROR_WITH_ARGS(S, ...) \
+    MSG_WITH_ARGS(S, __VA_ARGS__); \
     raise(3); \
     exit(1);
 
-#define ASSERT(c) \
-    if (!(c)) { \
-        ERROR("failed: ASSERT(" xstr(c) ")") \
+#define ASSERT(COND) \
+    if (!(COND)) { \
+        ERROR("failed: ASSERT(" XSTR(COND) ")") \
     }
 
-#define CHECK_SDL_RET(call) \
+#define CHECK_SDL_RET(CALL) \
     ({ \
-        int ret = call; \
+        int ret = CALL; \
         if (ret < 0) { \
             ERROR_WITH_ARGS("SDL error \"%s\"", SDL_GetError()); \
         } \
         ret; \
     })
 
-#define ASSERT_SDL(c) \
-    if (!(c)) { \
-        ERROR_WITH_ARGS("failed: ASSERT_SDL(" xstr(c) "), SDL_GetError()=%s", SDL_GetError()) \
+#define ASSERT_SDL(COND) \
+    if (!(COND)) { \
+        ERROR_WITH_ARGS("failed: ASSERT_SDL(" XSTR(COND) "), SDL_GetError()=%s", SDL_GetError()) \
     }
 
 #endif
