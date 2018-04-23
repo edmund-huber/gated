@@ -9,34 +9,33 @@ static SDL_DisplayMode display_mode;
 static SDL_Texture *input_texture_1 = NULL;
 static SDL_Texture *input_texture_2 = NULL;
 
+static void recreate_input_texture(SDL_Renderer *renderer, SDL_Texture **texture) {
+    // Create a texture that can be used as a render target.
+    if (*texture != NULL) {
+        SDL_DestroyTexture(*texture);
+    }
+    *texture = SDL_CreateTexture(
+        renderer,
+        SDL_PIXELFORMAT_RGBA8888,
+        SDL_TEXTUREACCESS_TARGET,
+        display_mode.w,
+        display_mode.h
+    );
+    ASSERT_SDL(*texture != NULL);
+    // Blank it.
+    CHECK_SDL_RET(SDL_SetRenderTarget(renderer, *texture));
+    CHECK_SDL_RET(SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0));
+    CHECK_SDL_RET(SDL_RenderClear(renderer));
+}
+
 static void change_display_mode(SDL_Renderer *renderer) {
     // Get the new display mode details.
     CHECK_SDL_RET(SDL_GetCurrentDisplayMode(0, &display_mode));
     printf("display: w=%i, h=%i\n", display_mode.w, display_mode.h);
 
     // (Re?)create the input textures.
-    if (input_texture_1 != NULL) {
-        SDL_DestroyTexture(input_texture_1);
-    }
-    input_texture_1 = SDL_CreateTexture(
-        renderer,
-        SDL_PIXELFORMAT_RGBA8888,
-        SDL_TEXTUREACCESS_TARGET,
-        display_mode.w,
-        display_mode.h
-    );
-    ASSERT_SDL(input_texture_1 != NULL);
-    if (input_texture_2 != NULL) {
-        SDL_DestroyTexture(input_texture_2);
-    }
-    input_texture_2 = SDL_CreateTexture(
-        renderer,
-        SDL_PIXELFORMAT_RGBA8888,
-        SDL_TEXTUREACCESS_TARGET,
-        display_mode.w,
-        display_mode.h
-    );
-    ASSERT_SDL(input_texture_2 != NULL);
+    recreate_input_texture(renderer, &input_texture_1);
+    recreate_input_texture(renderer, &input_texture_2);
 }
 
 void loop(SDL_Renderer *renderer) {
