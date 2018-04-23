@@ -90,7 +90,7 @@ public:
     void keyboard(SDL_KeyboardEvent &);
 
 private:
-    bool do_delete;
+    bool done;
     double time_begin;
     double time_end;
     bool moused;
@@ -99,6 +99,17 @@ private:
     void mouse_in(SDL_MouseMotionEvent &);
     void mouse_out(SDL_MouseMotionEvent &);
     void mouse_button(SDL_MouseButtonEvent &);
+};
+
+class UIEntity : public Entity {
+public:
+    UIEntity(Realm *);
+    bool think(void);
+    void draw(SDL_Renderer *, SDL_DisplayMode &);
+    void keyboard(SDL_KeyboardEvent &);
+
+private:
+    bool done;
 };
 
 #endif

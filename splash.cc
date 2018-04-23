@@ -4,7 +4,7 @@
 #include "entity.h"
 
 SplashEntity::SplashEntity(Realm *r) : Entity(r) {
-    do_delete = false;
+    done = false;
     time_begin = realm->time_in_seconds();
     time_end = time_begin + 2;
     moused = false;
@@ -33,14 +33,17 @@ void SplashEntity::draw_input_pixels(SDL_Renderer *renderer, SDL_DisplayMode &mo
 }
 
 bool SplashEntity::think(void) {
-    return do_delete;
+    if (done) {
+        new UIEntity(realm);
+        return true;
+    }
+    return false;
 }
 
 void SplashEntity::keyboard(SDL_KeyboardEvent &keyboard_event) {
     if (realm->time_in_seconds() > time_end) {
         if (keyboard_event.type == SDL_KEYDOWN) {
-            do_delete = true;
-            realm->finished = true;
+            done = true;
         }
     }
 }

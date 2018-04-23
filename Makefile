@@ -3,7 +3,7 @@ CXXFLAGS = -std=c++11 -Wall -Werror -DVERSION='"$(VERSION)"'
 
 SDL := "$(shell pwd)/sdl"
 SDL_IMAGE := "$(shell pwd)/sdl_image"
-gated: entity.cc loop.cc main.cc realm.cc splash.cc | sdl sdl_image
+gated: entity.cc loop.cc main.cc realm.cc splash.cc ui.cc | sdl sdl_image
 	$(CXX) \
 		$(CXXFLAGS) $(shell sdl/bin/sdl2-config --cflags) \
 		$(shell sdl/bin/sdl2-config --libs) -lSDL2 \
