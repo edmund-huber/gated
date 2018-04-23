@@ -74,10 +74,22 @@ void loop(SDL_Renderer *renderer) {
                     CHECK_SDL_RET(SDL_SetRenderTarget(renderer, input_texture_1));
                     SDL_Rect rect = { .x = ev.motion.x, .y = ev.motion.y, .w = 1, .h = 1 };
                     uint64_t pixel_1;
-                    CHECK_SDL_RET(SDL_RenderReadPixels(renderer, &rect, SDL_PIXELFORMAT_RGBA8888, &pixel_1, display_mode.w * 4));
+                    CHECK_SDL_RET(SDL_RenderReadPixels(
+                        renderer,
+                        &rect,
+                        SDL_PIXELFORMAT_RGBA8888,
+                        &pixel_1,
+                        display_mode.w * 4
+                    ));
                     CHECK_SDL_RET(SDL_SetRenderTarget(renderer, input_texture_2));
                     uint64_t pixel_2;
-                    CHECK_SDL_RET(SDL_RenderReadPixels(renderer, &rect, SDL_PIXELFORMAT_RGBA8888, &pixel_2, display_mode.w * 4));
+                    CHECK_SDL_RET(SDL_RenderReadPixels(
+                        renderer,
+                        &rect,
+                        SDL_PIXELFORMAT_RGBA8888,
+                        &pixel_2,
+                        display_mode.w * 4
+                    ));
                     ASSERT(sizeof(e_mouse_current) == 8);
                     e_mouse_current = (pixel_2 << 32) | pixel_1;
                 }
