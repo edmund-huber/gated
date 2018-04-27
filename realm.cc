@@ -7,12 +7,14 @@ int Realm::input_pixel_shift = 0;
 
 Realm::Realm(void) : Entity(NULL) {
     // A standalone realm.
+    dummy_entity = new DummyEntity(this);
     e_focused = 0;
     finished = false;
 }
 
 Realm::Realm(Realm *r) : Entity(r) {
     // An embedded realm.
+    dummy_entity = new DummyEntity(this);
     e_focused = 0;
     finished = false;
 }
@@ -32,7 +34,7 @@ Entity *Realm::get_entity(entity_id_t e) {
             return entity;
         }
     }
-    ASSERT(false);
+    return dummy_entity;
 }
 
 bool Realm::think(void) {

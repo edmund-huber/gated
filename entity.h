@@ -45,6 +45,11 @@ private:
 
 // Entity definitions,
 
+class DummyEntity : public Entity {
+public:
+    DummyEntity(Realm *);
+};
+
 class Realm : public Entity {
 public:
     Realm(void);
@@ -71,6 +76,7 @@ public:
     static int input_pixel_shift;
 
 private:
+    Entity *dummy_entity;
     list<Entity *> entities;
 
     // Forwarding input events to the focused entity.
@@ -110,6 +116,21 @@ public:
 
 private:
     bool done;
+};
+
+class LayerEntity : public Entity {
+public:
+    LayerEntity(Realm *);
+    void draw(SDL_Renderer *, SDL_DisplayMode &);
+    void draw_input_pixels(SDL_Renderer *, SDL_DisplayMode &);
+    void keyboard(SDL_KeyboardEvent &);
+
+private:
+    int32_t offset_x;
+    int32_t offset_y;
+    int32_t zoom;
+
+    void mouse_around(SDL_MouseMotionEvent &);
 };
 
 #endif
