@@ -126,9 +126,12 @@ public:
     void keyboard(SDL_KeyboardEvent &);
 
 private:
-    int32_t offset_x;
-    int32_t offset_y;
-    int32_t zoom;
+    int16_t offset_x;
+    int16_t offset_y;
+    int16_t highlight_u;
+    int16_t highlight_v;
+    int16_t zoom;
+    map<struct layer_coord, class Cell> cells;
 
     void mouse_around(SDL_MouseMotionEvent &);
 };

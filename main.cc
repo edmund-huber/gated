@@ -7,37 +7,6 @@
 
 #include "error.h"
 
-typedef struct {
-    int n_inputs;
-    bool labeled_inputs;
-    int n_outputs;
-    void (*fn)(int *, int *);
-} device_t;
-
-#define BASIC_DEVICE(NAME, EXPR) \
-    void NAME##_device_fn(int *inputs, int *outputs) { \
-        int a = inputs[0], b = inputs[1]; \
-        outputs[0] = EXPR; \
-    } \
-    \
-    device_t NAME##_device = { \
-        .n_inputs = 2, \
-        .labeled_inputs = false, \
-        .n_outputs = 1, \
-        .fn = NAME##_device_fn \
-    };
-
-BASIC_DEVICE(and, a & b);
-
-typedef struct {
-    device_t *device;
-    int traces[4];
-} cell_t;
-
-#define CELLS_X 16
-#define CELLS_Y 16
-cell_t cells[CELLS_X][CELLS_Y];
-
 SDL_Surface *trace_surface;
 SDL_Texture *tex;
 
