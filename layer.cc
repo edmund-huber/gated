@@ -71,7 +71,11 @@ LayerEntity::LayerEntity(Realm *r) : Entity(r) {
 }
 
 void LayerEntity::draw(SDL_Renderer *renderer, SDL_DisplayMode &mode) {
-    int16_t size = zoom * 16, margin = zoom;
+    int16_t
+        inner_size = zoom * 16,
+        margin = zoom,
+        size = inner_size + margin,
+        device_size = zoom * 10;
     int16_t min_x = (offset_x - size) / size;
     for (int16_t x = min_x; (x * size) - offset_x < mode.w; x++) {
         int min_y = (offset_y - size) / size;
@@ -85,8 +89,8 @@ void LayerEntity::draw(SDL_Renderer *renderer, SDL_DisplayMode &mode) {
             SDL_Rect rect = {
                 .x = (x * size) - offset_x,
                 .y = (y * size) - offset_y,
-                .w = size - (margin * 2),
-                .h = size - (margin * 2)
+                .w = inner_size,
+                .h = inner_size
             };
             CHECK_SDL_RET(SDL_RenderFillRect(renderer, &rect));
 
@@ -95,21 +99,60 @@ void LayerEntity::draw(SDL_Renderer *renderer, SDL_DisplayMode &mode) {
             if (it != cells.end()) {
                 Cell &cell = it->second;
 
-                // draw the device,
-                if (cell.device == &and_gate) {
-                    CHECK_SDL_RET(SDL_SetRenderDrawColor(renderer, 0xff, 0, 0, 0xff));
-                } else if (cell.device == &or_gate) {
-                    CHECK_SDL_RET(SDL_SetRenderDrawColor(renderer, 0, 0, 0xff, 0xff));
+                // draw the traces,
+                CHECK_SDL_RET(SDL_SetRenderDrawColor(renderer, 0, 0xff, 0, 0xff));
+                if (cell.traces[0] != LEVEL_EMPTY) {
+                    SDL_Rect rect = {
+                        .x = (x * size) + (inner_size / 2) - (inner_size / 16) - offset_x,
+                        .y = (y * size) - margin - offset_y,
+                        .w = (inner_size / 8),
+                        .h = (inner_size / 2) + (inner_size / 16) + margin
+                    };
+                    CHECK_SDL_RET(SDL_RenderFillRect(renderer, &rect));
                 }
-                SDL_Rect rect = {
-                    .x = (x * size) + (size / 2) - 4 - offset_x,
-                    .y = (y * size) + (size / 2) - 4 - offset_y,
-                    .w = 8,
-                    .h = 8
-                };
-                CHECK_SDL_RET(SDL_RenderFillRect(renderer, &rect));
+                if (cell.traces[1] != LEVEL_EMPTY) {
+                    SDL_Rect rect = {
+                        .x = (x * size) + (inner_size / 2) - (inner_size / 16) - offset_x,
+                        .y = (y * size) + (inner_size / 2) - (inner_size / 16) - offset_y,
+                        .w = (inner_size / 2) + (inner_size / 16) + margin,
+                        .h = inner_size / 8
+                    };
+                    CHECK_SDL_RET(SDL_RenderFillRect(renderer, &rect));
+                }
+                if (cell.traces[2] != LEVEL_EMPTY) {
+                    SDL_Rect rect = {
+                        .x = (x * size) + (inner_size / 2) - (inner_size / 16) - offset_x,
+                        .y = (y * size) + (inner_size / 2) - (inner_size / 16) - offset_y,
+                        .w = inner_size / 8,
+                        .h = (inner_size / 2) + (inner_size / 16) + margin
+                    };
+                    CHECK_SDL_RET(SDL_RenderFillRect(renderer, &rect));
+                }
+                if (cell.traces[3] != LEVEL_EMPTY) {
+                    SDL_Rect rect = {
+                        .x = (x * size) - margin - offset_x,
+                        .y = (y * size) + (inner_size / 2) - (inner_size / 16) - offset_y,
+                        .w = (inner_size / 2) + (inner_size / 16) + margin,
+                        .h = inner_size / 8
+                    };
+                    CHECK_SDL_RET(SDL_RenderFillRect(renderer, &rect));
+                }
 
-                // draw the traces.
+                // draw the device.
+                if (cell.device != NULL) {
+                    if (cell.device == &and_gate) {
+                        CHECK_SDL_RET(SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0xff));
+                    } else if (cell.device == &or_gate) {
+                        CHECK_SDL_RET(SDL_SetRenderDrawColor(renderer, 0, 0, 0xff, 0xff));
+                    }
+                    SDL_Rect rect = {
+                        .x = (x * size) + (inner_size / 2) - (device_size / 2) - offset_x,
+                        .y = (y * size) + (inner_size / 2) - (device_size / 2) - offset_y,
+                        .w = device_size,
+                        .h = device_size
+                    };
+                    CHECK_SDL_RET(SDL_RenderFillRect(renderer, &rect));
+                }
             }
         }
     }
@@ -160,17 +203,23 @@ void LayerEntity::keyboard(SDL_KeyboardEvent &keyboard_event) {
         case SDLK_k:
             highlight_v += 1;
             break;
+        #define SWITCH_TRACE(I) \
+            if (cells[highlight_uv].traces[I] == LEVEL_EMPTY) { \
+                cells[highlight_uv].traces[I] = LEVEL_FLOAT; \
+            } else { \
+                cells[highlight_uv].traces[I] = LEVEL_EMPTY; \
+            }
         case SDLK_t:
-            cells[highlight_uv].traces[0] = LEVEL_FLOAT;
+            SWITCH_TRACE(0);
             break;
         case SDLK_h:
-            cells[highlight_uv].traces[1] = LEVEL_FLOAT;
+            SWITCH_TRACE(1);
             break;
         case SDLK_g:
-            cells[highlight_uv].traces[2] = LEVEL_FLOAT;
+            SWITCH_TRACE(2);
             break;
         case SDLK_f:
-            cells[highlight_uv].traces[3] = LEVEL_FLOAT;
+            SWITCH_TRACE(3);
             break;
         case SDLK_r:
             {
@@ -180,7 +229,7 @@ void LayerEntity::keyboard(SDL_KeyboardEvent &keyboard_event) {
                 } else if (cell.device == &and_gate) {
                     cell.device = &or_gate;
                 } else if (cell.device == &or_gate) {
-                    cell.device = &and_gate;
+                    cell.device = NULL;
                 }
             }
             break;
